@@ -1,0 +1,66 @@
+<link rel="stylesheet" href="/static/css/users/users.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="user-dashboard">
+    <div class="header-actions">
+        <h1><i class="fas fa-user-shield"></i> Permisos por Perfil</h1>
+    </div>
+
+    <div class="filter-section shadow-sm" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <div class="form-group-custom" style="max-width: 600px; display: flex; gap: 15px; align-items: center;">
+            <label><strong>Perfil:</strong></label>
+            <select id="selectPerfil" class="select-modern" onchange="PermisosManager.loadPermisosPerfil()">
+                <option value="">Cargando perfiles...</option>
+            </select>
+            </div>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Módulo</th>
+                    <th class="text-center">Agregar</th>
+                    <th class="text-center">Editar</th>
+                    <th class="text-center">Eliminar</th>
+                    <th class="text-center">Consultar</th>
+                    <th class="text-center">Detalle</th>
+                    <th class="text-center">Imprimir</th>
+                    <th class="text-center">Bitácora</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="permisosTableBody">
+                <tr><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando módulos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script id="permisos-data" type="application/json">
+    {{permisos_json}}
+</script>
+
+<script>
+    const jsonString = document.getElementById('permisos-data').textContent;
+    const permisosBackend = JSON.parse(jsonString);
+    
+    console.log("🔍 DATA CRUDA DEL BACKEND (Permisos-Perfil):", permisosBackend);
+
+    // Función auxiliar de seguridad
+    function tienePermiso(valor) {
+        return valor === true || valor === 1 || valor === "true" || valor === "True";
+    }
+
+    // Mapeamos los permisos globalmente para este módulo
+    const PERMISOS_MODULO = {
+        canAdd: tienePermiso(permisosBackend.bitAgregar),
+        canEdit: tienePermiso(permisosBackend.bitEditar),
+        canDelete: tienePermiso(permisosBackend.bitEliminar)
+    };
+
+    console.log("✅ Permisos mapeados correctamente (Permisos-Perfil):", PERMISOS_MODULO);
+</script>
+
+<script src="/static/js/perfiles/permisos.js"></script>

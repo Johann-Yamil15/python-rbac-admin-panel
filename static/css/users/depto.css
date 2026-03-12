@@ -1,0 +1,354 @@
+/* --- LAYOUT ESPECÍFICO DE DEPARTAMENTOS --- */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* --- TABLA INTERACTIVA (EDICIÓN INLINE) --- */
+.modern-table .inline-input {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    color: #475569;
+}
+
+/* Resaltado al editar o pasar el mouse */
+.modern-table .inline-input:hover,
+.modern-table .inline-input:focus {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    outline: none;
+    color: #0f172a;
+}
+
+.modern-table .inline-input.bold {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* --- PERMISOS (CHECKS ESTILO BADGE) --- */
+.inline-permissions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.custom-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+.custom-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4f46e5;
+    /* Color Indigo institucional */
+    cursor: pointer;
+}
+
+.custom-check:has(input:checked) {
+    color: #4f46e5;
+}
+
+/* --- FILA DE CREACIÓN RÁPIDA (ADD ROW) --- */
+.add-row-trigger {
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-row-trigger td {
+    text-align: center;
+    padding: 15px !important;
+    color: #6366f1;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-top: 1px dashed #cbd5e1;
+}
+
+.add-row-trigger:hover td {
+    background: #eff6ff;
+    color: #4338ca;
+}
+
+/* Resaltado de la fila que se está creando */
+.new-row-highlight {
+    background-color: #f0f9ff !important;
+    border-left: 4px solid #3b82f6 !important;
+}
+
+/* --- BOTONES DE ACCIÓN INLINE --- */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.btn-save-inline {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save-inline:hover {
+    background: #4338ca;
+}
+
+.btn-cancel-inline {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-icon.delete {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 8px;
+}
+
+.btn-icon.delete:hover {
+    color: #ef4444;
+}
+
+/* --- RESPONSIVIDAD --- */
+@media (max-width: 768px) {
+    .inline-permissions {
+        gap: 6px;
+    }
+
+    .modern-table th,
+    .modern-table td {
+        padding: 10px;
+    }
+}
+
+/* --- HERENCIA DEL LAYOUT GENERAL --- */
+.user-dashboard {
+    padding: 20px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* --- TABLA CON SOPORTE INLINE --- */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+/* Estilo para los inputs que viven dentro de la tabla */
+.inline-input {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    color: #475569;
+}
+
+.inline-input:hover {
+    background: #f1f5f9;
+}
+
+.inline-input:focus {
+    background: white;
+    border-color: #4f46e5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.inline-input.bold {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* --- PERMISOS (CHIPS INTERACTIVOS) --- */
+.inline-permissions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.custom-check {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.custom-check:hover {
+    background: #f1f5f9;
+}
+
+.custom-check input[type="checkbox"] {
+    accent-color: #4f46e5;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+/* --- FILA DE AGREGAR (FOOTER) --- */
+.add-row-trigger {
+    background: #ffffff;
+    transition: all 0.2s;
+}
+
+.add-row-trigger td {
+    text-align: center;
+    color: #4f46e5;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 16px !important;
+    cursor: pointer;
+    border-top: 1px solid #e2e8f0;
+}
+
+.add-row-trigger:hover td {
+    background: #f5f3ff;
+    color: #4338ca;
+}
+
+/* Resaltado para la nueva fila cuando se está escribiendo */
+.new-row-highlight {
+    background-color: #f0f9ff !important;
+    animation: fadeInRow 0.3s ease;
+}
+
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- BOTONES DE ACCIÓN INLINE --- */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.btn-icon {
+    border: none;
+    background: transparent;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon.delete {
+    color: #ef4444;
+}
+
+.btn-icon.delete:hover {
+    background: #fef2f2;
+}
+
+.btn-save-inline {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-save-inline:hover {
+    background: #4338ca;
+}
+
+.btn-cancel-inline {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* --- SKELETON PARA DEPARTAMENTOS --- */
+.skeleton-row td {
+    padding: 15px 20px;
+}
+
+.skeleton-line {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+/* --- RESPONSIVIDAD --- */
+@media (max-width: 768px) {
+    .modern-table thead {
+        display: none;
+    }
+
+    .modern-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 20px !important;
+        border: none;
+    }
+
+    .modern-table tr {
+        border-bottom: 1px solid #e2e8f0;
+        display: block;
+        padding: 10px 0;
+    }
+}

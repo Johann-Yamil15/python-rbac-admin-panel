@@ -1,0 +1,30 @@
+<section class="error-page">
+    <link rel="stylesheet" href="/static/css/error/404.css">
+    
+    <div class="error-wrapper">
+        <div class="svg-container">
+            <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="300" cy="200" r="80" fill="#4d4dff" fill-opacity="0.1" />
+                <text x="50%" y="50%" dy=".35em" text-anchor="middle" class="svg-404">404</text>
+                <g class="shuttle">
+                    <path d="M300,100 L320,140 L300,130 L280,140 Z" fill="#4d4dff" />
+                    <circle cx="300" cy="115" r="3" fill="white" />
+                </g>
+            </svg>
+        </div>
+
+        <div class="error-text">
+            <h1>Ruta no encontrada</h1>
+            <p>Parece que te has aventurado fuera del mapa. El recurso en <code>{{path}}</code> no está disponible.</p>
+            
+            <div class="error-actions">
+                <a href="/" class="btn-back">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Regresar al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

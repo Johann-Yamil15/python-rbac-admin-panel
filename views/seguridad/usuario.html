@@ -1,0 +1,220 @@
+<link rel="stylesheet" href="/static/css/users/users.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="user-dashboard">
+    <div class="header-actions">
+        <h1>Usuarios</h1>
+
+        <div class="search-section-wrapper">
+            <div class="google-pill-container" id="searchPill">
+                <div class="main-search-part">
+                    <i class="fas fa-search search-icon-muted"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre o apellidos...">
+                </div>
+
+                <div id="advancedFilters" class="expanding-filter-box collapsed">
+                    <div class="v-divider"></div>
+
+                    <div class="filter-content-wrapper">
+                        <div class="filter-group-title">Rango de fechas de nacimiento</div>
+                        <div class="date-inputs-flex">
+                            <div class="input-group-minimal">
+                                <label>Desde</label>
+                                <input type="date" id="dateFrom">
+                            </div>
+                            <div class="input-group-minimal">
+                                <label>Hasta</label>
+                                <input type="date" id="dateTo">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pill-actions">
+                    <button id="btnToggleFilters" class="action-circle-btn" title="Filtros">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button id="btnClearFilters" class="action-circle-btn delete-btn" title="Limpiar">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button id="btnNewUser" class="btn-primary">Nuevo</button>
+    </div>
+
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre Completo</th>
+                <th>Correo</th>
+                <th>Sexo</th>
+                <th>Celular</th>
+                <th>Perfil</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+        </tbody>
+    </table>
+    <div class="pagination-container">
+
+        <div class="pagination-controls">
+            <button id="btnFirst" class="btn-page" title="Inicio">
+                <i class="fas fa-angle-double-left"></i>
+            </button>
+            <button id="btnPrev" class="btn-page" title="Anterior">
+                <i class="fas fa-angle-left"></i>
+            </button>
+
+            <span id="currentPageIndicator" class="page-text">Página 1 de 2</span>
+
+            <button id="btnNext" class="btn-page" title="Siguiente">
+                <i class="fas fa-angle-right"></i>
+            </button>
+            <button id="btnLast" class="btn-page" title="Final">
+                <i class="fas fa-angle-double-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Usuario</h2>
+        <form id="userForm" enctype="multipart/form-data">
+            <input type="hidden" name="id">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="label-hint">Nombre(s)</label>
+                    <input type="text" name="Nombre" id="name" placeholder="Nombre(s)" required>
+                </div>
+
+                <div class="row-apellidos">
+                    <div class="form-group">
+                        <input type="text" name="ApellidoP" id="ap_paterno" placeholder="Ap. Paterno" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="ApellidoM" id="ap_materno" placeholder="Ap. Materno">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-hint">Correo electrónico</label>
+                    <input type="email" name="strCorreo" id="emailInput" placeholder="correo@ejemplo.com" required>
+                    <div id="error_email" class="error-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-hint">Número Celular</label>
+                    <input type="text" name="strNumeroCelular" id="phoneInput" placeholder="Ej: 5512345678">
+                </div>
+
+                <div class="form-group">
+                    <label class="label-hint">Fecha de Nacimiento</label>
+                    <input type="date" name="FechaNacimiento" id="birthdateInput" required>
+                    <div id="error_birthdate" class="error-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Sexo</label>
+                    <select name="idSexo" id="sexoSelect" class="custom-select" required>
+                        <option value="">Seleccione sexo...</option>
+                    </select>
+                    <div id="error_sexo" class="error-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-hint">Contraseña</label>
+                    <input type="password" name="strPwd" id="passwordInput" placeholder="Contraseña">
+                </div>
+
+                <div class="form-group">
+                    <label>Perfil</label>
+                    <select name="idPerfil" id="deptoSelect" class="custom-select" required>
+                        <option value="">Seleccione un perfil...</option>
+                    </select>
+                    <div id="error_depto" class="error-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Estado Usuario</label>
+                    <select name="idEstadoUsuario" id="estadoSelect" class="custom-select" required>
+                        <option value="">Seleccione un estado...</option>
+                    </select>
+                    <div id="error_estado" class="error-text"></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="label-hint">Foto de Perfil</label>
+                        <div class="image-upload-wrapper">
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="file" id="imagenInput" name="imagenInput" class="form-control"
+                                    accept=".jpg,.jpeg,.png,.webp">
+
+                                <div id="previewContainer" class="d-none">
+                                    <img id="previewImg" src="" alt="Vista previa" class="avatar-preview">
+                                </div>
+                            </div>
+                            <small id="fileError" class="text-danger d-none">
+                                <i class="fas fa-exclamation-circle me-1"></i> Formato no válido. Use JPG, PNG o WebP.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="UserManager.closeModal()" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-save">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content confirm-delete">
+        <div class="warn-icon">⚠️</div>
+        <h2>¿Estás seguro?</h2>
+        <p>Esta acción no se puede deshacer. Se eliminará al usuario permanentemente.</p>
+        <div class="modal-actions">
+            <button type="button" onclick="UserManager.closeDeleteModal()" class="btn-secondary">No,
+                cancelar</button>
+            <button type="button" id="confirmDeleteBtn" class="btn-danger">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+
+
+<script id="permisos-data" type="application/json">
+    {{permisos_json}}
+</script>
+
+<script>
+    // Leemos el contenido de la etiqueta anterior y lo convertimos a objeto
+    const jsonString = document.getElementById('permisos-data').textContent;
+    const permisosBackend = JSON.parse(jsonString);
+    
+    console.log("🔍 DATA CRUDA DEL BACKEND:", permisosBackend);
+
+    // Función auxiliar de seguridad
+    function tienePermiso(valor) {
+        return valor === true || valor === 1 || valor === "true" || valor === "True";
+    }
+
+    // Mapeamos los permisos
+    const PERMISOS_MODULO = {
+        canAdd: tienePermiso(permisosBackend.bitAgregar),
+        canEdit: tienePermiso(permisosBackend.bitEditar),
+        canDelete: tienePermiso(permisosBackend.bitEliminar)
+    };
+
+    console.log("Permisos mapeados correctamente:", PERMISOS_MODULO);
+</script>
+
+<script src="/static/js/users/users.js"></script>

@@ -1,0 +1,5 @@
+gunicorn
+pymssql
+werkzeug
+Jinja2
+PyJWT

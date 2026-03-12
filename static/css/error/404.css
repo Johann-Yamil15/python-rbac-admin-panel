@@ -1,0 +1,70 @@
+.error-page {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    font-family: inherit;
+}
+
+.error-wrapper {
+    text-align: center;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.svg-404 {
+    font-size: 120px;
+    font-weight: 900;
+    fill: #30064e;
+    letter-spacing: 10px;
+}
+
+.shuttle {
+    animation: orbit 10s linear infinite;
+    transform-origin: 300px 200px;
+}
+
+@keyframes orbit {
+    from { transform: rotate(0deg) translateY(-120px); }
+    to { transform: rotate(360deg) translateY(-120px); }
+}
+
+.error-text h1 {
+    font-size: 2rem;
+    color: #1a1a1a;
+    margin-top: -40px;
+    font-weight: 700;
+}
+
+.error-text p {
+    color: #666;
+    margin: 15px 0 30px;
+}
+
+code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #ff4d4d;
+    font-family: monospace;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #4d4dff;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-back:hover {
+    background: #3a3adf;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 77, 255, 0.3);
+}
