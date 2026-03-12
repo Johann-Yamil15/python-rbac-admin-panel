@@ -4,7 +4,7 @@
 # CONFIGURACIÓN
 # =========================
 
-USE_LOCAL_DB = True   # True = local | False = nube (Render)
+USE_LOCAL_DB = False   # True = local | False = nube (Render)
 
 # ----- BASE DE DATOS LOCAL -----
 LOCAL_DB = {

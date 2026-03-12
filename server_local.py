@@ -7,7 +7,7 @@ if __name__ == "__main__":
     
     host = "0.0.0.0" 
     
-    print(f" Servidor activo en el puerto: {port}")
+    print(f" Servidor de desarrollo activo en: http://localhost:{port}")
     
     httpd = make_server(host, port, application)
     
