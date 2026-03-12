@@ -4,10 +4,12 @@ from app import application  # Importa la función 'application' de tu app.py
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    print(f" Servidor de desarrollo activo en: http://localhost:{port}")
     
-    # Creamos el servidor local
-    httpd = make_server("localhost", port, application)
+    host = "0.0.0.0" 
+    
+    print(f" Servidor activo en el puerto: {port}")
+    
+    httpd = make_server(host, port, application)
     
     try:
         httpd.serve_forever()

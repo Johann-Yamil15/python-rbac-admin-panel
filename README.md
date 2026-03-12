@@ -33,3 +33,7 @@ Python_web_seguridad/
 │   ├── principal1/          # Vistas para el grupo Principal 1 (p1_1.html)
 │   └── principal2/          # Vistas para el grupo Principal 2 (p2_1.html)
 └── server_local.py          # Punto de entrada del servidor de desarrollo
+```
+
+## Comando de ejecucion
+ python server_local.py
