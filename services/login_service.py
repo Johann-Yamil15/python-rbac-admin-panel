@@ -23,7 +23,7 @@ class LoginService:
             # Buscamos al usuario por correo e incluimos el estado para saber si está activo
             cursor.execute("""
                 SELECT * FROM Usuario 
-                WHERE strCorreo = %s AND strPwd = %s 
+                WHERE strCorreo = %s AND strPwd = %s AND idEstadoUsuario = 1
             """, (email, password_hash))
             row = cursor.fetchone()
             
