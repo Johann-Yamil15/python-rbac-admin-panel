@@ -47,9 +47,6 @@ def profile_action(breadcrumbs, environ):
     if user_data and 'strPwd' in user_data:
         del user_data['strPwd']
 
-        print("[DEBUG] Keys en flat_context:", list(flat_context.keys()))
-        print("[DEBUG] Muestra usuario.Nombre:", flat_context.get('usuario.Nombre'))
-
     # 4. Renderizar enviando variables procesadas y el objeto usuario
     return render_view('home/perfil.html', {
         "titulo": "Mi Perfil",
