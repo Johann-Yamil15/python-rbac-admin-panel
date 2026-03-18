@@ -6,6 +6,7 @@ from controllers.perfil_controller import perfil_manager_action, perfil_api_disp
 from controllers.permisos_controller import permisos_manager_action, permisos_api_dispatcher
 from controllers.login_controller import login_view, login_api_dispatcher, logout_action
 from controllers.vistasStaticas_controller import modulo_simulado_action
+from controllers.modulo_controller import modulo_manager_action, modulo_api_dispatcher, menu_api_dispatcher
 
 
 def get_route_handler(path, method):
@@ -16,6 +17,7 @@ def get_route_handler(path, method):
         ('/usuarios', 'GET'): lambda bc, env: user_manager_action(bc, env),
         ('/perfiles', 'GET'): lambda bc, env: perfil_manager_action(bc, env),
         ('/permisos', 'GET'): lambda bc, env: permisos_manager_action(bc, env),
+        ('/modulos', 'GET'): lambda bc, env: modulo_manager_action(bc, env),
 
         # --- RUTAS DE AUTENTICACIÓN ---
         ('/login', 'GET'): lambda bc, env: login_view(env),
@@ -33,11 +35,20 @@ def get_route_handler(path, method):
         ('/api/sexos', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'sexos'),
         ('/api/estados', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'estados'),
         ('/api/modulos', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'modulos'),
+        ('/api/menus', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'menus'),
+        # El PUT y DELETE usan el nuevo dispatcher que me mandaste
+        ('/api/menus', 'PUT'): lambda bc, env: menu_api_dispatcher(env, 'PUT'),
+        ('/api/menus', 'DELETE'): lambda bc, env: menu_api_dispatcher(env, 'DELETE'),
 
         ('/api/perfiles', 'GET'): lambda bc, env: perfil_api_dispatcher(env, 'GET'),
         ('/api/perfiles', 'POST'): lambda bc, env: perfil_api_dispatcher(env, 'POST'),
         ('/api/perfiles', 'PUT'): lambda bc, env: perfil_api_dispatcher(env, 'PUT'),
         ('/api/perfiles', 'DELETE'): lambda bc, env: perfil_api_dispatcher(env, 'DELETE'),
+
+        ('/api/modulos', 'GET'): lambda bc, env: modulo_api_dispatcher(env, 'GET'),
+        ('/api/modulos', 'POST'): lambda bc, env: modulo_api_dispatcher(env, 'POST'),
+        ('/api/modulos', 'PUT'): lambda bc, env: modulo_api_dispatcher(env, 'PUT'),
+        ('/api/modulos', 'DELETE'): lambda bc, env: modulo_api_dispatcher(env, 'DELETE'),
 
         ('/api/permisos_perfil', 'GET'): lambda bc, env: permisos_api_dispatcher(env, 'GET'),
         ('/api/permisos_perfil', 'POST'): lambda bc, env: permisos_api_dispatcher(env, 'POST'),

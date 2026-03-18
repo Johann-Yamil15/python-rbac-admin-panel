@@ -54,3 +54,8 @@ class CatalogoService:
     def get_modulos():
         print("Llamada a: get_modulos()")
         return CatalogoService.get_catalog("Modulo", "strNombreModulo")
+  
+    @staticmethod
+    def get_menus():
+        print("Llamada a: get_menus()")
+        return CatalogoService.get_catalog("Menu", "strNombreMenu")

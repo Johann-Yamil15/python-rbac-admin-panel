@@ -67,7 +67,7 @@ def permisos_api_dispatcher(environ, method):
         # --- CASO GET: Obtener permisos de un perfil específico ---
         if method == 'GET':
             if perfil_id_url:
-                data = PermisosService.get_permisos_by_perfil(perfil_id_url)
+                data = PermisosService.get_permisos_by_viewperfil(perfil_id_url)
                 return json.dumps(data).encode('utf-8')
             return json.dumps({"error": "ID de perfil requerido"}).encode('utf-8')
 

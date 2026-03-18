@@ -1,0 +1,268 @@
+<link rel="stylesheet" href="/static/css/users/users.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* --- Mejora del Modal --- */
+    .modal-modern {
+        max-width: 450px !important;
+        padding: 0 !important;
+        overflow: hidden;
+        border-radius: 20px !important;
+        border: none !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .modal-header-custom {
+        background: #f8fafc;
+        padding: 30px 24px;
+        text-align: center;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        background: #3b82f6;
+        /* Azul para módulos, distinto al de perfiles */
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+
+    .form-body-custom {
+        padding: 24px;
+    }
+
+    /* Input con Icono */
+    .input-with-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .input-with-icon i {
+        position: absolute;
+        left: 15px;
+        color: #94a3b8;
+    }
+
+    .input-with-icon input,
+    .input-with-icon select {
+        width: 100%;
+        padding-left: 45px !important;
+        height: 50px;
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0;
+        font-family: inherit;
+        font-size: 14px;
+    }
+
+    .input-with-icon select {
+        background: #fff;
+        cursor: pointer;
+    }
+
+    .label-hint {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    /* Acciones */
+    .modal-actions-custom {
+        padding: 10px 24px 30px;
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-cancel-light {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-save-modern {
+        flex: 2;
+        padding: 12px;
+        border-radius: 12px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    }
+
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+</style>
+
+<div class="user-dashboard">
+    <div class="header-actions">
+        <h1>Módulos del Sistema</h1>
+
+        <div class="search-section-wrapper">
+            <div class="google-pill-container" id="searchPill">
+                <div class="main-search-part">
+                    <i class="fas fa-search search-icon-muted"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar módulo por nombre...">
+                </div>
+
+                <div class="pill-actions">
+                    <button id="btnClearFilters" class="action-circle-btn delete-btn" title="Limpiar">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button id="btnNewModulo" class="btn-primary" onclick="ModuloManager.openModal()">
+            <i class="fas fa-plus"></i> Nuevo
+        </button>
+    </div>
+
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>Nombre del Módulo</th>
+                <th>Menú Padre</th>
+                <th>Ruta (URL)</th>
+                <th style="text-align: center;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="moduloTableBody">
+        </tbody>
+    </table>
+
+    <div class="pagination-container">
+        <div class="pagination-controls">
+            <button id="btnFirst" class="btn-page"><i class="fas fa-angle-double-left"></i></button>
+            <button id="btnPrev" class="btn-page"><i class="fas fa-angle-left"></i></button>
+            <span id="currentPageIndicator" class="page-text">Página 1 de 1</span>
+            <button id="btnNext" class="btn-page"><i class="fas fa-angle-right"></i></button>
+            <button id="btnLast" class="btn-page"><i class="fas fa-angle-double-right"></i></button>
+        </div>
+    </div>
+</div>
+
+<div id="moduloModal" class="modal">
+    <div class="modal-content modal-modern">
+        <div class="modal-header-custom">
+            <div class="icon-circle">
+                <i class="fas fa-puzzle-piece"></i>
+            </div>
+            <h2 id="modalTitle">Nuevo Módulo</h2>
+        </div>
+
+        <form id="moduloForm">
+            <input type="hidden" name="id">
+
+            <div class="form-body-custom">
+                <div class="form-group-custom">
+                    <label class="label-hint">Nombre del Módulo</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-layer-group"></i>
+                        <input type="text" name="strNombreModulo" id="strNombreModulo" placeholder="Ej: Usuarios"
+                            required>
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label class="label-hint"
+                        style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Menú Padre</span>
+                        <span id="menuActions" style="display: none; gap: 15px; font-size: 12px;">
+                            <a href="#" onclick="ModuloManager.editMenu(event)"
+                                style="color: #3b82f6; text-decoration: none;">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="#" onclick="ModuloManager.deleteMenu(event)"
+                                style="color: #ef4444; text-decoration: none;">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        </span>
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-folder"></i>
+                        <input type="text" name="nombreMenu" id="nombreMenu" list="menusList"
+                            placeholder="Seleccione o escriba un menú..." required autocomplete="off">
+                        <datalist id="menusList"></datalist>
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label class="label-hint">Ruta / URL</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-link"></i>
+                        <input type="text" name="strRuta" id="strRuta" placeholder="Ej: /usuarios">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions-custom">
+                <button type="button" onclick="ModuloManager.closeModal()" class="btn-cancel-light">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-save-modern">
+                    <span>Guardar Cambios</span>
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content confirm-delete">
+        <div class="warn-icon" style="font-size: 50px; margin-bottom: 15px;">⚠️</div>
+        <h2>¿Estás seguro?</h2>
+        <p>Esta acción no se puede deshacer. Se eliminará el módulo permanentemente del sistema.</p>
+        <div class="modal-actions" style="justify-content: center;">
+            <button type="button" onclick="ModuloManager.closeDeleteModal()" class="btn-secondary">No, cancelar</button>
+            <button type="button" id="confirmDeleteBtn" class="btn-danger">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script id="permisos-data" type="application/json">
+    {{permisos_json}}
+</script>
+
+<script>
+    const jsonString = document.getElementById('permisos-data').textContent;
+    const permisosBackend = JSON.parse(jsonString);
+
+    console.log("🔍 DATA CRUDA DEL BACKEND (Módulos):", permisosBackend);
+
+    // Función auxiliar de seguridad
+    function tienePermiso(valor) {
+        return valor === true || valor === 1 || valor === "true" || valor === "True";
+    }
+
+    // Mapeamos los permisos globalmente para este módulo
+    const PERMISOS_MODULO = {
+        canAdd: tienePermiso(permisosBackend.bitAgregar),
+        canEdit: tienePermiso(permisosBackend.bitEditar),
+        canDelete: tienePermiso(permisosBackend.bitEliminar)
+    };
+
+    console.log("✅ Permisos mapeados correctamente (Módulos):", PERMISOS_MODULO);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/static/js/modulos/modulos.js"></script>
