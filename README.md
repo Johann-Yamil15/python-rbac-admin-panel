@@ -1,6 +1,6 @@
 # Python RBAC Admin Panel
 
-> **Plataforma web ligera de administración con control de acceso basado en roles (RBAC), arquitectura limpia y motor de plantillas propio — sin frameworks pesados.**
+> **Plataforma web de administración con control de acceso basado en roles (RBAC), construida en Python puro con arquitectura limpia de servicios — sin Django ni Flask.**
 
 ---
 
@@ -12,18 +12,24 @@
 4. [Tech Stack](#tech-stack)
 5. [Estructura del Proyecto](#estructura-del-proyecto)
 6. [Guía de Instalación](#guía-de-instalación)
-7. [Variables de Entorno y Configuración](#variables-de-entorno-y-configuración)
+7. [Configuración de Base de Datos](#configuración-de-base-de-datos)
 8. [Endpoints de la API](#endpoints-de-la-api)
 9. [Sistema RBAC — Permisos](#sistema-rbac--permisos)
-10. [Despliegue en Producción](#despliegue-en-producción)
+10. [Motor de Plantillas Propio](#motor-de-plantillas-propio)
+11. [Despliegue en Producción](#despliegue-en-producción)
 
 ---
 
 ## Descripción General
 
-**Python RBAC Admin Panel** es una plataforma web desarrollada desde cero en Python puro (con Werkzeug como capa WSGI mínima), diseñada para gestionar usuarios, perfiles y permisos de forma granular. Su principal diferenciador es que **no depende de Django ni Flask**: implementa su propio motor de plantillas (`render_view`), su propio sistema de rutas y su propia capa de datos, manteniendo el stack extremadamente ligero y auditable.
+**Python RBAC Admin Panel** es una plataforma web desarrollada desde cero sin frameworks pesados. Usa **Werkzeug** únicamente como capa WSGI (manejo de Request/Response y archivos), pero todo lo demás — enrutamiento, renderizado de vistas, inyección de variables, menús dinámicos — es código propio.
 
-El sistema está pensado para entornos empresariales donde se necesita control total sobre el código y bajo overhead en producción.
+El sistema permite cambiar entre base de datos local y en la nube con **un solo booleano** en `config/settings.py`, lo que lo hace ideal para desarrollo y publicación en el mismo repositorio sin tocar el código de servicios.
+
+```python
+# config/settings.py
+USE_LOCAL_DB = False   # True = SQL Server local | False = nube (Somee / Azure)
+```
 
 ---
 
@@ -31,77 +37,116 @@ El sistema está pensado para entornos empresariales donde se necesita control t
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENTE (Browser)                       │
-│              HTML5 · CSS3 · Vanilla JS (ES6+)                   │
-│         Fetch API · Async/Await · DOM dinámico                  │
+│                      CLIENTE (Browser)                          │
+│           HTML5 · CSS3 · Vanilla JS ES6+ · Fetch API            │
 └────────────────────────────┬────────────────────────────────────┘
                              │ HTTP/HTTPS
 ┌────────────────────────────▼────────────────────────────────────┐
-│                     SERVIDOR WSGI                               │
-│          Gunicorn (producción) / server_local.py (dev)          │
-│                    Werkzeug Request/Response                     │
+│                        PUNTO DE ENTRADA                         │
+│   server_local.py (dev)  /  gunicorn app:application (prod)     │
+│               wsgiref.simple_server en desarrollo               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
-│                     CAPA DE ROUTING                             │
-│              router.py — Mapeo URL → Handler                    │
-│         Soporte GET · POST · PUT · DELETE · multipart           │
-└──────────┬─────────────────┬──────────────────┬────────────────┘
-           │                 │                  │
-┌──────────▼───────┐ ┌───────▼──────┐ ┌────────▼───────┐
-│   CONTROLLERS    │ │   API Views  │ │  Static Files  │
-│  (page actions)  │ │ /api/usuarios│ │  CSS · JS · IMG│
-│  profile_action  │ │ /api/perfil  │ └────────────────┘
-│  home_action     │ │ /api/sexos   │
-└──────────┬───────┘ └───────┬──────┘
-           │                 │
-┌──────────▼─────────────────▼────────────────────────────────────┐
+│                        app.py — WSGI App                        │
+│                                                                 │
+│  1. Archivos estáticos  →  /static/** (CSS, JS, imágenes)       │
+│  2. Middleware JWT       →  valida cookie 'auth_token'          │
+│     ├─ No logueado      →  redirect /login  (vistas HTML)       │
+│     └─ No logueado      →  401 JSON         (rutas /api/)       │
+│  3. get_breadcrumbs()   →  genera nav contextual                │
+│  4. get_route_handler() →  despacha al controlador correcto     │
+└────────┬───────────────────────────────┬────────────────────────┘
+         │                               │
+┌────────▼──────────────┐    ┌───────────▼────────────────────────┐
+│   VISTAS (HTML)       │    │   API ENDPOINTS (JSON)             │
+│  *_manager_action()   │    │   *_api_dispatcher(environ,method) │
+│                       │    │                                    │
+│  home_controller      │    │  GET  /api/usuarios                │
+│  user_controller      │    │  POST /api/usuarios                │
+│  perfil_controller    │    │  PUT  /api/usuarios                │
+│  permisos_controller  │    │  DELETE /api/usuarios              │
+│  modulo_controller    │    │  GET  /api/perfil                  │
+│  profile_controller   │    │  GET  /api/sexos · /api/estados    │
+│  login_controller     │    │  POST /api/login                   │
+└────────┬──────────────┘    └───────────┬────────────────────────┘
+         │                               │
+┌────────▼───────────────────────────────▼────────────────────────┐
 │                       CAPA DE SERVICIOS                         │
-│  UserService · HomeService · PermisosService · AuthService      │
-│           Lógica de negocio desacoplada del transporte          │
+│                                                                 │
+│  UserService      → CRUD usuarios, hash SHA-256, imagen upload  │
+│  HomeService      → Menú jerárquico desde BD por perfil         │
+│  PermisosService  → Consulta permisos bitwise por módulo        │
+│  AuthService      → Login, JWT encode/decode                    │
+│  CatalogoService  → Sexos, estados, perfiles, módulos           │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
-│                   MOTOR DE PLANTILLAS PROPIO                    │
-│    render_view() — Inyección de variables con dot-notation      │
-│    resolve_dot_notation() — Aplanado de dicts anidados          │
-│    Menú dinámico · Breadcrumbs · Reemplazo seguro con regex     │
+│                    core/render.py                               │
+│                                                                 │
+│  render_view(template, context)                                 │
+│  ├─ Lee layout.html  →  reemplaza {{content}}                   │
+│  ├─ Genera menú HTML desde context['menu_sidebar']              │
+│  ├─ Genera breadcrumbs desde context['breadcrumbs']             │
+│  ├─ resolve_dot_notation()  →  aplana dicts anidados            │
+│  │    { "usuario": {"Nombre": "Ana"} }                          │
+│  │    → { "usuario.Nombre": "Ana" }                             │
+│  └─ re.sub() con lambda  →  reemplaza {{ usuario.Nombre }}      │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
-│                   BASE DE DATOS — SQL Server                    │
-│                       pymssql driver                            │
-│    Local: SQL Server Express   /   Nube: Azure SQL / Render     │
+│               BASE DE DATOS — SQL Server                        │
+│                                                                 │
+│   LOCAL:  localhost  (SQL Server Express)                       │
+│   NUBE:   DesarrolloWeb.mssql.somee.com                         │
+│   Driver: pymssql — cursor(as_dict=True)                        │
+│                                                                 │
+│   Tablas: Usuario · Perfil · Modulo · PermisosPerfil            │
+│           Sexo · EstadoUsuario · Menu                           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Patrón:** MVC adaptado a servicios. Los controladores (`*_action`) son delgados: solo orquestan; la lógica vive en `services/`.
+**Flujo de una petición típica `GET /usuarios`:**
+
+```
+Browser → app.py → valida cookie JWT → get_route_handler('/usuarios','GET')
+       → user_manager_action(breadcrumbs, environ)
+       → PermisosService.get_permisos_by_perfil(id_perfil)  →  filtra módulo 'Usuario'
+       → HomeService.get_sidebar_menu(id_perfil)
+       → render_view('seguridad/usuario.html', context)
+       → HTML con variables inyectadas → Response 200
+```
 
 ---
 
 ## Características Principales
 
-- **Menú Lateral 100% Dinámico** — El sidebar se genera consultando la BD según el perfil del usuario. No hay menús hardcodeados en el HTML.
-- **Control de Acceso Granular (RBAC)** — Permisos por módulo: `bitAgregar`, `bitEditar`, `bitEliminar`, `bitConsulta`. Verificación tanto en backend (antes de ejecutar) como en frontend (antes de renderizar botones).
-- **Motor de Plantillas Propio** — `render_view()` con soporte de dot-notation (`{{ usuario.Nombre }}`), aplanado de dicts anidados, sustitución segura contra backslashes con `lambda` en `re.sub`.
-- **API RESTful Integrada** — Endpoints JSON bajo `/api/` para CRUD completo de usuarios, catálogos y permisos.
-- **Subida de Imágenes** — Manejo de `multipart/form-data` con validación de extensión, vista previa en tiempo real y fallback a imagen por defecto.
-- **Paginación y Filtros en Cliente** — Búsqueda estilo "Google Pill", filtros por rango de fechas y paginación sin recargar la página.
-- **Dual-Environment Ready** — Mismo código corre en desarrollo local (SQL Server Express) y en producción en la nube (Azure SQL / Render).
+- **Switch BD con un booleano** — `USE_LOCAL_DB = True/False` en `settings.py` alterna entre SQL Server local y la nube sin modificar ningún servicio.
+- **Menú Lateral 100% Dinámico** — `HomeService` consulta la BD y construye la jerarquía `Menu → Submódulos` para el perfil activo. Ningún ítem está hardcodeado en el HTML.
+- **Middleware JWT en `app.py`** — Cada petición (excepto `/login` y `/api/login`) valida la cookie `auth_token`. APIs responden 401 JSON; vistas redirigen a `/login`.
+- **RBAC Granular** — 4 bits de permiso por módulo por perfil: `bitAgregar`, `bitEditar`, `bitEliminar`, `bitConsulta`. Verificados en backend antes de ejecutar e inyectados al frontend como objeto global `PERMISOS_MODULO`.
+- **Motor de Plantillas Propio** — `render_view()` + `resolve_dot_notation()` soportan `{{ usuario.Nombre }}` en HTML plano con dicts anidados, sin Jinja2.
+- **Subida de Imágenes Segura** — `UserService.save_profile_image()` valida extensión, genera nombre único con `uuid4` y guarda ruta relativa en BD. En edición, solo actualiza imagen si se sube una nueva.
+- **Contraseñas con SHA-256** — El hash se genera en `UserService`. En edición, si el campo viene vacío, se conserva la contraseña existente sin tocarla.
+- **Modelo `User` con doble mapeo** — `from_dict()` acepta columnas SQL Server (`Nombre`, `ApellidoP`, `idPerfil`) y `to_dict()` exporta formato para frontend (`nombre`, `ap`, `nombre_completo`).
+- **Paginación y filtros en cliente** — Sin recargas. Búsqueda normalizada sin acentos, filtro por rango de fechas, paginación con `slice()` sobre arreglo en memoria. Race condition entre catálogos y usuarios resuelto con `.then()`.
 
 ---
 
 ## Tech Stack
 
-| Capa | Tecnología |
-|------|-----------|
-| Servidor WSGI | Werkzeug 3.x |
-| Servidor de Producción | Gunicorn |
-| Autenticación | PyJWT |
-| Base de datos | SQL Server (pymssql) |
-| Templating | Motor propio (`core/render.py`) |
-| Frontend | HTML5 + CSS3 + Vanilla JS ES6+ |
-| Íconos | Font Awesome + Lucide |
+| Capa | Tecnología | Rol |
+|------|-----------|-----|
+| WSGI | Werkzeug | Request, Response, redirect, manejo de archivos |
+| Servidor dev | `wsgiref.simple_server` | `server_local.py` puerto 8000 |
+| Servidor prod | Gunicorn | `gunicorn app:application` |
+| Autenticación | PyJWT | Cookie `auth_token` firmada con HS256 |
+| Base de datos | SQL Server + pymssql | `cursor(as_dict=True)` |
+| Templating | Motor propio `core/render.py` | Dot-notation, regex, sin Jinja2 |
+| Frontend | HTML5 + CSS3 + Vanilla JS ES6+ | Fetch API, async/await, DOM dinámico |
+| Íconos | Font Awesome + Lucide | Layout y tablas |
+
+> Jinja2 está en `requirements.txt` como dependencia instalada pero **no se utiliza** en el motor de plantillas actual.
 
 ---
 
@@ -110,42 +155,57 @@ El sistema está pensado para entornos empresariales donde se necesita control t
 ```
 python-rbac-admin-panel/
 │
-├── server_local.py          # Punto de entrada para desarrollo local
-├── wsgi.py                  # Punto de entrada para Gunicorn (producción)
-├── requirements.txt         # Dependencias del proyecto
-├── .env                     # Variables de entorno (NO subir a git)
+├── app.py                          # WSGI: estáticos, JWT middleware, routing central
+├── server_local.py                 # Dev: wsgiref en puerto 8000
+├── requirements.txt                # gunicorn pymssql werkzeug Jinja2 PyJWT
+│
+├── config/
+│   ├── settings.py                 # USE_LOCAL_DB · LOCAL_DB · CLOUD_DB
+│   └── database.py                 # get_connection() · test_connection()
 │
 ├── core/
-│   ├── render.py            # Motor de plantillas: render_view(), resolve_dot_notation()
-│   ├── router.py            # Enrutador HTTP — mapeo URL → handler
-│   └── auth.py              # Middleware de sesión y JWT
+│   ├── render.py                   # render_view() · resolve_dot_notation()
+│   └── router.py                   # get_route_handler() — dict de rutas exactas
+│
+├── models/
+│   └── user_model.py               # class User: from_dict() ↔ to_dict()
 │
 ├── controllers/
-│   ├── home_controller.py   # Vistas principales (dashboard, perfil)
-│   ├── user_controller.py   # CRUD de usuarios
-│   └── security_controller.py  # Perfiles, módulos, permisos
+│   ├── home_controller.py          # index_action (dashboard)
+│   ├── user_controller.py          # user_manager_action · user_api_dispatcher
+│   ├── perfil_controller.py        # perfil_manager_action · perfil_api_dispatcher
+│   ├── permisos_controller.py      # permisos_manager_action · permisos_api_dispatcher
+│   ├── modulo_controller.py        # modulo_manager_action · modulo/menu api_dispatcher
+│   ├── profile_controller.py       # profile_action (vista Mi Perfil)
+│   ├── login_controller.py         # login_view · login_api_dispatcher · logout_action
+│   ├── catalogo_controller.py      # catalogo_api_dispatcher (sexos, estados, etc.)
+│   ├── vistasStaticas_controller.py # modulo_simulado_action
+│   └── error_controller.py         # not_found_action (404)
 │
 ├── services/
-│   ├── user_service.py      # Lógica de usuarios y validaciones
-│   ├── home_service.py      # Generación de menú jerárquico
-│   ├── permisos_service.py  # Consulta de permisos RBAC
-│   └── auth_service.py      # Login, logout, manejo de JWT
+│   ├── user_service.py             # CRUD · SHA-256 · save_profile_image()
+│   ├── home_service.py             # get_sidebar_menu() jerarquía Menu→Submódulos
+│   ├── permisos_service.py         # get_permisos_by_perfil()
+│   └── login_service.py            # autenticación · SECRET_KEY
 │
 ├── views/
 │   └── home/
-│       ├── layout.html      # Layout base con sidebar dinámico
-│       ├── index.html       # Dashboard
-│       ├── perfil.html      # Perfil de usuario
-│       └── usuarios.html    # CRUD de usuarios
+│       ├── layout.html             # Base: sidebar dinámico · breadcrumbs · {{content}}
+│       ├── index.html              # Dashboard
+│       ├── perfil.html             # Mi Perfil
+│       └── seguridad/
+│           ├── usuario.html        # CRUD Usuarios
+│           ├── perfil.html         # CRUD Perfiles
+│           ├── modulo.html         # CRUD Módulos
+│           └── permisos.html       # Asignación de permisos por perfil
 │
 └── static/
-    ├── css/
-    │   ├── home/layout.css  # Estilos del layout global
-    │   └── home/index.css   # Estilos por módulo
-    ├── js/
-    │   └── home/layout.js   # Lógica del sidebar y componentes globales
-    └── Images/
-        └── users/           # Imágenes de perfil de usuarios
+    ├── css/home/
+    │   ├── layout.css              # Sidebar, navbar, breadcrumbs
+    │   └── index.css               # Estilos por módulo
+    ├── js/home/
+    │   └── layout.js               # Sidebar dinámico, Lucide init
+    └── Images/users/               # Imágenes de perfil (generadas por uuid4)
 ```
 
 ---
@@ -155,7 +215,7 @@ python-rbac-admin-panel/
 ### Requisitos Previos
 
 - Python 3.10+
-- SQL Server (Express o superior) con una instancia activa
+- SQL Server (Express local) o acceso a servidor en la nube
 - `pip` actualizado
 
 ### 1. Clonar el Repositorio
@@ -165,26 +225,13 @@ git clone https://github.com/tu-usuario/python-rbac-admin-panel.git
 cd python-rbac-admin-panel
 ```
 
-### 2. Crear y Activar Entorno Virtual
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux / macOS
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Instalar Dependencias
+### 2. Instalar Dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
 Contenido de `requirements.txt`:
-
 ```
 gunicorn
 pymssql
@@ -193,121 +240,98 @@ Jinja2
 PyJWT
 ```
 
-### 4. Configurar la Base de Datos
+### 3. Configurar la Conexión a BD
 
-Ejecuta el script de inicialización en tu instancia de SQL Server:
+Edita `config/settings.py`:
 
-```bash
-# Desde SQL Server Management Studio o sqlcmd
-sqlcmd -S localhost -d master -i scripts/db_init.sql
+```python
+USE_LOCAL_DB = True   # True = local, False = nube
+
+LOCAL_DB = {
+    "server":   "localhost",
+    "user":     "sa",
+    "password": "tu_password",
+    "database": "nombre_de_tu_bd",
+}
+
+CLOUD_DB = {
+    "server":   "tu-servidor.mssql.somee.com",
+    "user":     "tu_usuario_SQLLogin",
+    "password": "tu_password_nube",
+    "database": "nombre_bd_nube"
+}
 ```
 
-El script crea las tablas: `Usuarios`, `Perfiles`, `Modulos`, `PermisosPerfil`, `Sexos`, `Estados`.
-
-### 5. Configurar Variables de Entorno
-
-Copia el archivo de ejemplo y edítalo:
+### 4. Verificar Conexión
 
 ```bash
-cp .env.example .env
-# Editar .env con tus credenciales (ver sección siguiente)
+python -c "from config.database import test_connection; print(test_connection())"
+# Imprime la fecha/hora del servidor SQL si la conexión es exitosa
 ```
 
-### 6. Ejecutar en Desarrollo
+### 5. Ejecutar en Desarrollo
 
 ```bash
 python server_local.py
+# Servidor activo en: http://localhost:8000
 ```
-
-El servidor quedará disponible en: `http://localhost:8000`
 
 ---
 
-## Variables de Entorno y Configuración
+## Configuración de Base de Datos
 
-Crea un archivo `.env` en la raíz del proyecto. **Nunca subas este archivo a git** (ya está en `.gitignore`).
+### Switch local/nube
 
-```env
-# ─── BASE DE DATOS ────────────────────────────────────────────
-# Local (SQL Server Express)
-DB_SERVER=localhost\SQLEXPRESS
-DB_NAME=nombre_base_de_datos
-DB_USER=sa
-DB_PASSWORD=tu_password_seguro
-DB_PORT=1433
-
-# ─── SERVIDOR ─────────────────────────────────────────────────
-APP_HOST=0.0.0.0
-APP_PORT=8000
-APP_ENV=development          # development | production
-
-# ─── SEGURIDAD ────────────────────────────────────────────────
-JWT_SECRET_KEY=cambia_esto_por_una_clave_larga_y_aleatoria
-JWT_EXPIRATION_HOURS=8
-SESSION_COOKIE_NAME=rbac_session
-
-# ─── ARCHIVOS ─────────────────────────────────────────────────
-UPLOAD_FOLDER=static/Images/users
-MAX_UPLOAD_SIZE_MB=2
-ALLOWED_EXTENSIONS=jpg,jpeg,png,webp
-```
-
-### Configuración para Producción (Render / Azure)
-
-En la plataforma de despliegue, configura estas variables de entorno adicionales:
-
-```env
-APP_ENV=production
-
-# SQL Server en la nube (Azure SQL o similar)
-DB_SERVER=tu-servidor.database.windows.net
-DB_NAME=nombre_base_produccion
-DB_USER=admin_user
-DB_PASSWORD=password_produccion
-```
-
-### Cómo se consumen en el código
+`database.py` lee `USE_LOCAL_DB` y selecciona el bloque de credenciales. Todos los servicios llaman a `get_connection()` sin conocer el entorno:
 
 ```python
-# core/config.py
-import os
-
-DB_CONFIG = {
-    'server':   os.environ.get('DB_SERVER', 'localhost\\SQLEXPRESS'),
-    'database': os.environ.get('DB_NAME', 'dev_db'),
-    'user':     os.environ.get('DB_USER', 'sa'),
-    'password': os.environ.get('DB_PASSWORD', ''),
-    'port':     int(os.environ.get('DB_PORT', 1433)),
-}
-
-JWT_SECRET = os.environ.get('JWT_SECRET_KEY', 'dev-secret-change-me')
+def get_connection():
+    config = LOCAL_DB if USE_LOCAL_DB else CLOUD_DB
+    return pymssql.connect(
+        server=config["server"],
+        user=config["user"],
+        password=config["password"],
+        database=config["database"],
+    )
 ```
+
+### Patrón de consulta
+
+Todos los `SELECT` usan `cursor(as_dict=True)` para obtener dicts con nombres de columna como llaves, directamente compatibles con `User.from_dict()`:
+
+```python
+cursor = conn.cursor(as_dict=True)
+cursor.execute("SELECT * FROM Usuario WHERE id = %s", (user_id,))
+row = cursor.fetchone()
+# row → {"id": 5, "Nombre": "Ana", "ApellidoP": "García", ...}
+return User.from_dict(row).to_dict()
+```
+
+### Tablas Requeridas
+
+| Tabla | Columnas clave |
+|-------|---------------|
+| `Usuario` | `id`, `Nombre`, `ApellidoP`, `ApellidoM`, `strCorreo`, `strPwd` (SHA-256), `idPerfil`, `idEstadoUsuario`, `idSexo`, `strNumeroCelular`, `strImagenPath`, `FechaNacimiento`, `FechaRegistro` |
+| `Perfil` | `id`, `strNombrePerfil` |
+| `Modulo` | `id`, `strNombreModulo`, `strRuta`, `idMenu` |
+| `Menu` | `id`, `strNombreMenu` |
+| `PermisosPerfil` | `idPerfil`, `idModulo`, `bitAgregar`, `bitEditar`, `bitEliminar`, `bitConsulta` |
+| `Sexo` | `id`, `strSexo` |
+| `EstadoUsuario` | `id`, `strNombreEstado` |
 
 ---
 
 ## Endpoints de la API
 
-Todos los endpoints requieren sesión activa (cookie JWT). Las respuestas son siempre `application/json`.
+Todos los endpoints (excepto `/api/login`) requieren cookie `auth_token` válida.
 
 ### Autenticación
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/login` | Iniciar sesión. Body: `{ email, password }` |
-| `GET` | `/logout` | Cerrar sesión y limpiar cookie |
-
-**Respuesta exitosa de `/login`:**
-```json
-{
-  "success": true,
-  "redirect": "/",
-  "user": {
-    "id": 1,
-    "nombre_completo": "Juan Pérez",
-    "id_perfil": 1
-  }
-}
-```
+| Método | Endpoint | Body | Descripción |
+|--------|----------|------|-------------|
+| `GET` | `/login` | — | Renderiza vista de login |
+| `POST` | `/api/login` | `{ email, password }` | Valida credenciales, setea cookie JWT |
+| `GET` | `/logout` | — | Elimina cookie → redirect `/login` |
 
 ---
 
@@ -316,33 +340,41 @@ Todos los endpoints requieren sesión activa (cookie JWT). Las respuestas son si
 | Método | Endpoint | Descripción | Permiso requerido |
 |--------|----------|-------------|-------------------|
 | `GET` | `/api/usuarios` | Lista todos los usuarios | `bitConsulta` |
-| `GET` | `/api/usuarios?id={id}` | Obtiene un usuario por ID | `bitConsulta` |
-| `POST` | `/api/usuarios` | Crea un nuevo usuario (multipart) | `bitAgregar` |
-| `PUT` | `/api/usuarios` | Actualiza un usuario (multipart) | `bitEditar` |
-| `DELETE` | `/api/usuarios` | Elimina un usuario. Body: `{ id }` | `bitEliminar` |
+| `GET` | `/api/usuarios?id={id}` | Un usuario por ID | `bitConsulta` |
+| `POST` | `/api/usuarios` | Crear usuario (`multipart/form-data`) | `bitAgregar` |
+| `PUT` | `/api/usuarios` | Actualizar usuario (`multipart/form-data`) | `bitEditar` |
+| `DELETE` | `/api/usuarios` | Eliminar. Body JSON: `{ "id": 5 }` | `bitEliminar` |
 
-**Estructura de usuario (GET):**
+**Respuesta GET (un usuario):**
 ```json
 {
   "id": 5,
-  "nombre": "María",
-  "ap": "González",
+  "nombre": "Ana",
+  "ap": "García",
   "am": "López",
-  "nombre_completo": "María González López",
-  "email": "maria@empresa.com",
+  "nombre_completo": "Ana García López",
+  "email": "ana@empresa.com",
   "celular": "7771234567",
   "id_perfil": 2,
   "id_sexo": 2,
   "id_estado": 1,
   "fecha_nac": "1995-03-15",
   "fecha_registro": "2024-01-10",
-  "imagen_path": "static/Images/users/maria.jpg"
+  "imagen_path": "static\\Images\\users\\user_a3f9c1.jpg"
 }
 ```
 
-**Respuesta estándar (POST / PUT / DELETE):**
+**Campos `multipart/form-data` para POST/PUT:**
+```
+Nombre, ApellidoP, ApellidoM, strCorreo, strPwd,
+FechaNacimiento, deptoSelect (idPerfil),
+sexoSelect (idSexo), estadoSelect (idEstadoUsuario),
+strNumeroCelular, imagenInput (archivo — opcional en PUT)
+```
+
+**Respuesta estándar operaciones de escritura:**
 ```json
-{ "success": true, "msg": "Usuario registrado correctamente." }
+{ "success": true,  "msg": "Usuario registrado exitosamente" }
 { "success": false, "msg": "Error de validación", "errors": { "email": "Ya está en uso" } }
 ```
 
@@ -350,79 +382,139 @@ Todos los endpoints requieren sesión activa (cookie JWT). Las respuestas son si
 
 ### Catálogos
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/perfil` | Lista todos los perfiles de acceso |
-| `GET` | `/api/sexos` | Lista catálogo de sexos |
-| `GET` | `/api/estados` | Lista estados de cuenta (Activo/Inactivo) |
-
-**Respuesta de `/api/perfil`:**
-```json
-[
-  { "id": 1, "strNombrePerfil": "Super Administrador" },
-  { "id": 2, "strNombrePerfil": "Operador" }
-]
-```
+| Endpoint | Descripción | Ejemplo de respuesta |
+|----------|-------------|---------------------|
+| `GET /api/perfil` | Perfiles de acceso | `[{ "id": 1, "strNombrePerfil": "Super Administrador" }]` |
+| `GET /api/sexos` | Catálogo de sexos | `[{ "id": 1, "strSexo": "Masculino" }]` |
+| `GET /api/estados` | Estados de cuenta | `[{ "id": 1, "strNombreEstado": "Activo" }]` |
+| `GET /api/modulos` | Módulos del sistema | `[{ "id": 3, "strNombreModulo": "Usuario", "strRuta": "/usuarios" }]` |
+| `GET /api/menus` | Agrupadores de menú | `[{ "id": 1, "strNombreMenu": "Seguridad" }]` |
 
 ---
 
-### Seguridad (Módulos y Permisos)
+### Seguridad
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| `GET` | `/api/modulos` | Lista todos los módulos del sistema |
-| `GET` | `/api/permisos?id_perfil={id}` | Permisos de un perfil específico |
-| `PUT` | `/api/permisos` | Actualiza permisos de un perfil |
+| `GET/POST/PUT/DELETE` | `/api/perfiles` | CRUD de perfiles de acceso |
+| `GET/POST/PUT/DELETE` | `/api/modulos` | CRUD de módulos del sistema |
+| `PUT/DELETE` | `/api/menus` | Gestión de agrupadores de menú |
+| `GET` | `/api/permisos_perfil?id_perfil={id}` | Permisos de un perfil específico |
+| `POST` | `/api/permisos_perfil` | Guardar/actualizar permisos |
 
 ---
 
 ## Sistema RBAC — Permisos
 
-El sistema evalúa 4 bits de permiso por módulo por perfil:
+Cada combinación `(Perfil, Módulo)` tiene 4 bits independientes:
 
-| Bit | Acción | Efecto en UI | Efecto en Backend |
-|-----|--------|--------------|-------------------|
-| `bitConsulta` | Ver | Muestra la tabla/vista | Permite GET |
-| `bitAgregar` | Crear | Muestra botón "Nuevo" | Permite POST |
-| `bitEditar` | Editar | Muestra botón de edición | Permite PUT |
-| `bitEliminar` | Eliminar | Muestra botón de eliminar | Permite DELETE |
+| Bit | Acción | Efecto en backend | Efecto en frontend |
+|-----|--------|------------------|--------------------|
+| `bitConsulta` | Ver | Permite GET | Muestra la tabla/vista |
+| `bitAgregar` | Crear | Permite POST | Muestra botón "Nuevo" |
+| `bitEditar` | Editar | Permite PUT | Muestra botón editar por fila |
+| `bitEliminar` | Eliminar | Permite DELETE | Muestra botón eliminar por fila |
 
-Los permisos se inyectan en el HTML como objeto global JS al renderizar la vista:
+**Flujo de inyección de permisos:**
+
+```python
+# user_controller.py — user_manager_action()
+todos_los_permisos = PermisosService.get_permisos_by_perfil(id_perfil)
+
+permisos_usuario = next(
+    (p for p in todos_los_permisos if p.get('strNombreModulo') == 'Usuario'),
+    {"bitAgregar": False, "bitEditar": False, "bitEliminar": False, "bitConsulta": False}
+)
+
+render_view('seguridad/usuario.html', {
+    "permisos_json": json.dumps(permisos_usuario)
+})
+```
 
 ```html
+<!-- usuario.html — objeto global accesible desde cualquier JS de la vista -->
 <script>
   const PERMISOS_MODULO = {{ permisos_json }};
-  // → { "canAdd": true, "canEdit": true, "canDelete": false, "canView": true }
 </script>
+```
+
+```javascript
+// users.js — renderTable()
+if (PERMISOS_MODULO.bitEditar)
+    botonesAccion += `<button class="btn-edit" onclick="UserManager.openModal(${u.id})">...</button>`;
+
+if (PERMISOS_MODULO.bitEliminar)
+    botonesAccion += `<button class="btn-delete" onclick="UserManager.delete(${u.id})">...</button>`;
+
+if (!botonesAccion)
+    botonesAccion = '<span class="text-muted small">Sin permisos</span>';
+```
+
+---
+
+## Motor de Plantillas Propio
+
+`core/render.py` reemplaza completamente a Jinja2. Funciona en 4 pasos:
+
+**1. Une layout y vista:**
+```python
+final_html = layout.replace('{{content}}', content)
+```
+
+**2. Genera el menú sidebar desde Python (no desde HTML):**
+```python
+# Itera context['menu_sidebar'] construyendo divs y anchors
+# Resultado reemplaza {{menu_sidebar_placeholder}} en layout.html
+```
+
+**3. Aplana dicts anidados — `resolve_dot_notation()`:**
+```python
+# Entrada:  { "usuario": {"Nombre": "Ana", "ap": "García"} }
+# Salida:   { "usuario.Nombre": "Ana", "usuario.ap": "García" }
+# Permite usar {{ usuario.Nombre }} en el HTML
+```
+
+**4. Reemplaza con regex + lambda (resistente a backslashes en rutas de imagen):**
+```python
+for key, value in flat_context.items():
+    patron = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'
+    str_value = str(value) if value is not None else ''
+    # Lambda con default arg: evita bug de closure en bucles
+    # Lambda también evita que re.sub interprete \ en rutas Windows como escape
+    final_html = re.sub(patron, lambda m, v=str_value: v, final_html)
 ```
 
 ---
 
 ## Despliegue en Producción
 
-### Con Gunicorn (Render / VPS)
+### Con Gunicorn
 
 ```bash
-gunicorn wsgi:app --workers 2 --bind 0.0.0.0:$PORT
+gunicorn app:application --workers 2 --bind 0.0.0.0:$PORT
 ```
 
-**`render.yaml` (si usas Render.com):**
+### En Render.com
+
+`render.yaml`:
 ```yaml
 services:
   - type: web
-    name: rbac-admin-panel
+    name: python-rbac-admin-panel
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app --workers 2 --bind 0.0.0.0:$PORT
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: DB_SERVER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: JWT_SECRET_KEY
-        generateValue: true
+    startCommand: gunicorn app:application --workers 2 --bind 0.0.0.0:$PORT
 ```
 
-> **Nota sobre la BD en Render:** Render no tiene SQL Server nativo. Se recomienda usar **Azure SQL** (tier gratuito disponible) o **ElephantSQL** migrando a PostgreSQL con el driver `psycopg2`. La capa de servicios está desacoplada para facilitar ese cambio.
+Antes de hacer push, asegúrate de que `config/settings.py` tenga:
+```python
+USE_LOCAL_DB = False   # apunta a CLOUD_DB
+```
+
+### Checklist antes de publicar
+
+- `USE_LOCAL_DB = False` en `settings.py`
+- Credenciales de `CLOUD_DB` apuntan al servidor de producción
+- La carpeta `static/Images/users/` existe en el servidor (se crea automáticamente con `os.makedirs(..., exist_ok=True)` en `save_profile_image()`)
+- El servidor SQL en la nube tiene whitelistada la IP de Render
+- `SECRET_KEY` en `login_service.py` es una cadena larga y aleatoria, no el valor de desarrollo
