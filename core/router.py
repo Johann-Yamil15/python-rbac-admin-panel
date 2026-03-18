@@ -7,6 +7,7 @@ from controllers.permisos_controller import permisos_manager_action, permisos_ap
 from controllers.login_controller import login_view, login_api_dispatcher, logout_action
 from controllers.vistasStaticas_controller import modulo_simulado_action
 from controllers.modulo_controller import modulo_manager_action, modulo_api_dispatcher, menu_api_dispatcher
+from controllers.profile_controller import profile_action
 
 
 def get_route_handler(path, method):
@@ -18,6 +19,7 @@ def get_route_handler(path, method):
         ('/perfiles', 'GET'): lambda bc, env: perfil_manager_action(bc, env),
         ('/permisos', 'GET'): lambda bc, env: permisos_manager_action(bc, env),
         ('/modulos', 'GET'): lambda bc, env: modulo_manager_action(bc, env),
+        ('/profile', 'GET'): lambda bc, env: profile_action(bc, env),
 
         # --- RUTAS DE AUTENTICACIÓN ---
         ('/login', 'GET'): lambda bc, env: login_view(env),

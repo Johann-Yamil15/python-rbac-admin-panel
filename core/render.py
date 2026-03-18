@@ -1,5 +1,18 @@
+from multiprocessing import context
 import os
 import re
+
+def resolve_dot_notation(context):
+    flat = {}
+    for key, value in context.items():
+        if key == 'menu_sidebar':
+            continue
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                flat[f"{key}.{sub_key}"] = sub_value
+        else:
+            flat[key] = value
+    return flat
 
 def render_view(template_name, context={}):
     current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,11 +90,13 @@ def render_view(template_name, context={}):
     #         placeholder = '{{' + key + '}}'
     #         final_html = final_html.replace(placeholder, str(value))
 
-    for key, value in context.items():
-        if key != 'menu_sidebar': 
-            # Esto buscará la llave ignorando si hay espacios adentro
-            patron = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'
-            # Reemplazamos usando expresiones regulares
-            final_html = re.sub(patron, str(value), final_html)
-        
+    flat_context = resolve_dot_notation(context)
+
+    print("[DEBUG] flat_context keys:", list(flat_context.keys()))  # ← verifica aquí
+
+    for key, value in flat_context.items():
+        patron = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'
+        str_value = str(value) if value is not None else ''
+        final_html = re.sub(patron, lambda m, v=str_value: v, final_html)
+
     return final_html.encode('utf-8')

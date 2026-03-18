@@ -39,8 +39,7 @@ const UserManager = {
 
         this.bindEvents();
         this.setupValidations();
-        this.loadCatalogos();
-        this.loadUsers();
+        this.loadCatalogos().then(() => this.loadUsers());
     },
 
     bindEvents() {
@@ -162,6 +161,7 @@ const UserManager = {
 
         } catch (e) {
             console.error("Error cargando catálogos:", e);
+            this.allPerfiles = []; // Aseguramos que no falle el render si no se cargan perfiles
         }
     },
 
@@ -170,7 +170,7 @@ const UserManager = {
         if (Array.isArray(users) && users.length > 0) {
             this.tableBody.innerHTML = users.map(u => {
                 // --- NUEVA LÓGICA PARA BUSCAR EL NOMBRE DEL PERFIL ---
-                const perfilObj = this.allPerfiles.find(p => p.id == u.id_perfil);
+                const perfilObj = (this.allPerfiles || []).find(p => p.id == u.id_perfil);
                 const nombrePerfil = perfilObj ? perfilObj.strNombrePerfil : 'Sin Perfil';
                 // ------------------------------------------------------
 
