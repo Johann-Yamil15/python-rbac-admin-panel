@@ -1,18 +1,34 @@
 from core.render import render_view
 from services.db_service import get_home_data
 from services.home_service import HomeService
+from services.permisos_service import PermisosService
 
 def index_action(breadcrumbs, environ):
     # 1. Extraer el usuario que el Middleware ya validó y guardó en environ
-    current_user = environ.get('app.current_user', {})
+    user = environ.get('app.current_user', {})
+    id_perfil_logeado = user.get('id_perfil', 1)
     
-    # 2. Obtener datos específicos de esta vista (BD)
+    # 1. Obtener todos los permisos del usuario logeado
+    todos_los_permisos = PermisosService.get_permisos_by_perfil(id_perfil_logeado)
+    
+    # 2. Filtrar los permisos específicamente para el módulo 'Perfil'
+    permisos_modulo = next(
+        (p for p in todos_los_permisos if p.get('strNombreModulo') == 'Perfil'), 
+        {}
+    )
+    
+    # 3. Si no tiene permisos, enviar el diccionario por defecto en False
+    if not permisos_modulo:
+        permisos_modulo = {
+            "bitAgregar": False, 
+            "bitEditar": False,
+            "bitEliminar": False, 
+            "bitConsulta": False,
+            "bitDetalle": False
+        }
+        
+    menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)
     datos_bd = get_home_data()
-    
-    # 3. Obtener el menú usando el ID de perfil del token
-    id_perfil = current_user.get('id_perfil', 1)
-    menu_dinamico = HomeService.get_sidebar_menu(id_perfil)
-    
     # 4. Construir contexto (Variables planas para el layout)
     context = {
         "titulo": "Monitor de Sistema",
@@ -23,9 +39,9 @@ def index_action(breadcrumbs, environ):
         "breadcrumbs": breadcrumbs,
         
         # Datos del usuario centralizados
-        "user_nombre": current_user.get('nombre_completo', 'Usuario'),
-        "user_email": current_user.get('email', 'Sin correo'),
-        "user_iniciales": current_user.get('iniciales', 'US')
+        "user_nombre": user.get('nombre_completo', 'Usuario'),
+        "user_email": user.get('email', 'Sin correo'),
+        "user_iniciales": user.get('iniciales', 'US')
     }
     
     return render_view('home/index.html', context)
