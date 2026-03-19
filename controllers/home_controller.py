@@ -44,4 +44,16 @@ def index_action(breadcrumbs, environ):
         "user_iniciales": user.get('iniciales', 'US')
     }
     
-    return render_view('home/index.html', context)
+    return render_view('home/index.html', {
+         "titulo": "Monitor de Sistema",
+        "menu_sidebar": menu_dinamico,
+        "mensaje": "Estado de infraestructura en tiempo real",
+        "servidor_fecha": datos_bd['fecha_bd'],
+        "Estado": "Activo" if datos_bd.get('online') else "Desactivado",
+        "breadcrumbs": breadcrumbs,
+        
+        # VARIABLES PARA EL LAYOUT
+        "user_nombre": user.get('nombre_completo', 'Usuario'),
+        "user_email": user.get('email', ''),
+        "user_iniciales": user.get('iniciales', 'U'),
+    })
