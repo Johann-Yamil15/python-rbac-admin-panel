@@ -5,23 +5,13 @@ from services.permisos_service import PermisosService
 from controllers.error_controller import not_found_action
 
 def index_action(breadcrumbs, environ):
+    # Mismo patrón que perfil_manager_action y permisos_manager_action
     user = environ.get('app.current_user', {})
-    
-    # Si no hay usuario autenticado, redirigir al login
-    if not user:
-        # o retornar error/redirect según tu arquitectura
-        return not_found_action(breadcrumbs, environ)
-    
-    id_perfil_logeado = user.get('id_perfil')
-    
-    # Sin perfil válido, no construir menú completo
-    if not id_perfil_logeado:
-        menu_dinamico = []
-    else:
-        menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)
-    
+    id_perfil_logeado = user.get('id_perfil', 1)  # ← default 1 igual que los demás
+
+    menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)
     datos_bd = get_home_data()
-    
+
     return render_view('home/index.html', {
         "titulo": "Monitor de Sistema",
         "menu_sidebar": menu_dinamico,

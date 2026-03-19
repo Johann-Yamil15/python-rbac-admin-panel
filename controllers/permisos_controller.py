@@ -1,5 +1,5 @@
 import json
-from posix import environ
+# from posix import environ
 from werkzeug.wrappers import Request
 from services.permisos_service import PermisosService
 from services.perfil_service import PerfilService
