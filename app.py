@@ -64,20 +64,19 @@ def application(environ, start_response):
     # Rutas que cualquiera puede ver sin estar logueado
     rutas_publicas = {'/login', '/login/', '/api/login', '/api/login/'}
 
-    if path not in rutas_publicas and path != '/':
+    if path not in rutas_publicas:
         current_user = get_current_user(environ)
 
-        # Si NO está logueado
-        if not current_user:
-            if path.startswith('/api/'):
-                resp = Response('{"success": false, "msg": "Sesión expirada"}',
-                                status=401, mimetype='application/json')
-                return resp(environ, start_response)
-            else:
-                resp = redirect('/login')
-                return resp(environ, start_response)
+    if not current_user:
+        if path.startswith('/api/'):
+            resp = Response('{"success": false, "msg": "Sesión expirada"}',
+                            status=401, mimetype='application/json')
+            return resp(environ, start_response)
+        else:
+            resp = redirect('/login')
+            return resp(environ, start_response)
 
-        environ['app.current_user'] = current_user
+    environ['app.current_user'] = current_user
 
     # --- 3. PROCESAMIENTO DE RUTAS DINÁMICAS ---
     breadcrumbs = get_breadcrumbs(path)
