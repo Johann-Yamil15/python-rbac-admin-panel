@@ -8,13 +8,10 @@ from werkzeug.utils import redirect
 from services.login_service import SECRET_KEY
 
 def get_current_user(environ):
-    """Extrae y decodifica el token de la cookie de la petición."""
     request = Request(environ)
     token = request.cookies.get('auth_token')
-
     if not token:
         return None
-
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
@@ -40,7 +37,7 @@ def application(environ, start_response):
         start_response('204 No Content', [('Content-Length', '0')])
         return [b""]
 
-    # --- 1. LÓGICA PARA ARCHIVOS ESTÁTICOS ---
+    # --- 1. ARCHIVOS ESTÁTICOS ---
     if path.startswith('/static/'):
         file_path = os.path.join(os.getcwd(), path.lstrip('/'))
         if os.path.exists(file_path):
@@ -52,7 +49,6 @@ def application(environ, start_response):
                 content_type, _ = mimetypes.guess_type(file_path)
                 if not content_type:
                     content_type = "text/plain"
-
             start_response('200 OK', [('Content-Type', content_type)])
             with open(file_path, 'rb') as f:
                 return [f.read()]
@@ -60,25 +56,22 @@ def application(environ, start_response):
             start_response('404 Not Found', [('Content-Type', 'text/plain')])
             return [b"Archivo estatico no encontrado"]
 
-    # --- 2. MIDDLEWARE DE AUTENTICACIÓN (NUEVO) ---
-    # Rutas que cualquiera puede ver sin estar logueado
+    # --- 2. MIDDLEWARE DE AUTENTICACIÓN ---
     rutas_publicas = {'/login', '/login/', '/api/login', '/api/login/'}
 
     if path not in rutas_publicas:
         current_user = get_current_user(environ)
+        if not current_user:
+            if path.startswith('/api/'):
+                resp = Response('{"success": false, "msg": "Sesión expirada"}',
+                                status=401, mimetype='application/json')
+                return resp(environ, start_response)
+            else:
+                resp = redirect('/login')
+                return resp(environ, start_response)
+        environ['app.current_user'] = current_user
 
-    if not current_user:
-        if path.startswith('/api/'):
-            resp = Response('{"success": false, "msg": "Sesión expirada"}',
-                            status=401, mimetype='application/json')
-            return resp(environ, start_response)
-        else:
-            resp = redirect('/login')
-            return resp(environ, start_response)
-
-    environ['app.current_user'] = current_user
-
-    # --- 3. PROCESAMIENTO DE RUTAS DINÁMICAS ---
+    # --- 3. RUTAS DINÁMICAS ---
     breadcrumbs = get_breadcrumbs(path)
     handler, status = get_route_handler(path, method)
 
@@ -100,8 +93,7 @@ def application(environ, start_response):
     except Exception as e:
         print(f"🔥 Error ejecutando handler: {e}")
         status = '500 Internal Server Error'
-        response_body = f"Error crítico en el servidor: {e}".encode(
-            'utf-8')
+        response_body = f"Error crítico en el servidor: {e}".encode('utf-8')
 
     start_response(status, headers)
     return [response_body]
