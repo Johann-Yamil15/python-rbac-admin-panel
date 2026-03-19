@@ -1,7 +1,10 @@
 import json
+from posix import environ
 from services.permisos_service import PermisosService
 from services.home_service import HomeService
 from core.render import render_view
+from controllers.error_controller import not_found_action
+
 
 def modulo_simulado_action(breadcrumbs, environ, seccion, nombre_modulo):
     user = environ.get('app.current_user', {})
@@ -30,6 +33,9 @@ def modulo_simulado_action(breadcrumbs, environ, seccion, nombre_modulo):
         {"id": 2, "nombre": f"Registro Prueba B - {nombre_modulo}", "estado": "Inactivo"},
         {"id": 3, "nombre": f"Registro Prueba C - {nombre_modulo}", "estado": "Activo"},
     ]
+
+    if not permisos_modulo.get('bitConsulta', False):
+        return not_found_action(breadcrumbs, environ)
 
     menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)
     archivo_nombre = nombre_modulo.replace("Principal ", "p").replace(".", "_").lower()

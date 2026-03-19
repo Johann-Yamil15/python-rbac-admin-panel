@@ -1,6 +1,6 @@
 import os
 from wsgiref.simple_server import make_server
-from app import application  # Importa la función 'application' de tu app.py
+from app import application
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))

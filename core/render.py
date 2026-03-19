@@ -35,7 +35,7 @@ def render_view(template_name, context={}):
     
     final_html = layout.replace('{{content}}', content)
 
-    # --- NUEVA LÓGICA PARA MENÚ DINÁMICO (Sustituye al {% for %}) ---
+    # --- LÓGICA PARA MENÚ DINÁMICO (Sustituye al {% for %}) ---
     if 'menu_sidebar' in context:
         menu_html = ""
         for menu in context['menu_sidebar']:
@@ -70,7 +70,7 @@ def render_view(template_name, context={}):
     else:
         final_html = final_html.replace('{{menu_sidebar_placeholder}}', '')
 
-    # --- Lógica de breadcrumbs (Mantienes la tuya) ---
+    # --- Lógica de breadcrumbs ---
     if 'breadcrumbs' in context:
         bc_html = ""
         for i, bc in enumerate(context['breadcrumbs']):
@@ -84,15 +84,11 @@ def render_view(template_name, context={}):
     else:
         final_html = final_html.replace('{{breadcrumbs_placeholder}}', 'Dashboard')
 
-    # Reemplazo de variables generales
-    # for key, value in context.items():
-    #     if key != 'menu_sidebar': # Evitamos procesar la lista como string simple
-    #         placeholder = '{{' + key + '}}'
-    #         final_html = final_html.replace(placeholder, str(value))
+
 
     flat_context = resolve_dot_notation(context)
 
-    print("[DEBUG] flat_context keys:", list(flat_context.keys()))  # ← verifica aquí
+    print("[DEBUG] flat_context keys:", list(flat_context.keys())) 
 
     for key, value in flat_context.items():
         patron = r'\{\{\s*' + re.escape(key) + r'\s*\}\}'

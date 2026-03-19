@@ -4,6 +4,7 @@ from services.perfil_service import PerfilService
 from services.home_service import HomeService
 from services.permisos_service import PermisosService  
 from core.render import render_view
+from controllers.error_controller import not_found_action
 
 def perfil_manager_action(breadcrumbs, environ):
     """Renderiza la pantalla principal de perfiles"""
@@ -30,6 +31,9 @@ def perfil_manager_action(breadcrumbs, environ):
             "bitConsulta": False,
             "bitDetalle": False
         }
+
+    if not permisos_modulo.get('bitConsulta', False):
+        return not_found_action(breadcrumbs, environ)
         
     menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)
     

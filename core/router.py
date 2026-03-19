@@ -11,9 +11,7 @@ from controllers.profile_controller import profile_action
 
 
 def get_route_handler(path, method):
-    # Diccionario de rutas exactas: (path, method) -> function
     routes = {
-        # --- CAMBIO AQUÍ: Ahora pasamos bc y env a los controladores ---
         ('/', 'GET'): lambda bc, env: index_action(bc, env),
         ('/usuarios', 'GET'): lambda bc, env: user_manager_action(bc, env),
         ('/perfiles', 'GET'): lambda bc, env: perfil_manager_action(bc, env),
@@ -26,19 +24,17 @@ def get_route_handler(path, method):
         ('/api/login', 'POST'): lambda bc, env: login_api_dispatcher(env, 'POST'),
         ('/logout', 'GET'): lambda bc, env: logout_action(env),
 
-        # Las APIs ya reciben env y method, así que están bien
         ('/api/usuarios', 'GET'): lambda bc, env: user_api_dispatcher(env, 'GET'),
         ('/api/usuarios', 'POST'): lambda bc, env: user_api_dispatcher(env, 'POST'),
         ('/api/usuarios', 'PUT'): lambda bc, env: user_api_dispatcher(env, 'PUT'),
         ('/api/usuarios', 'DELETE'): lambda bc, env: user_api_dispatcher(env, 'DELETE'),
 
-        # ... (resto de tus rutas de catálogos y perfiles) ...
         ('/api/perfil', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'perfiles'),
         ('/api/sexos', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'sexos'),
         ('/api/estados', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'estados'),
         ('/api/modulos', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'modulos'),
         ('/api/menus', 'GET'): lambda bc, env: catalogo_api_dispatcher(env, 'GET', 'menus'),
-        # El PUT y DELETE usan el nuevo dispatcher que me mandaste
+
         ('/api/menus', 'PUT'): lambda bc, env: menu_api_dispatcher(env, 'PUT'),
         ('/api/menus', 'DELETE'): lambda bc, env: menu_api_dispatcher(env, 'DELETE'),
 

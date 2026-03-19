@@ -1,13 +1,12 @@
 import json
+from posix import environ
 from werkzeug.wrappers import Request
 from services.permisos_service import PermisosService
 from services.perfil_service import PerfilService
 from services.permisos_service import PermisosService
 from services.home_service import HomeService
 from core.render import render_view
-
-# Agregamos 'environ' al recibir los parámetros
-
+from controllers.error_controller import not_found_action
 
 def permisos_manager_action(breadcrumbs, environ):
     """Renderiza la pantalla principal de permisos"""
@@ -34,6 +33,9 @@ def permisos_manager_action(breadcrumbs, environ):
             "bitConsulta": False,
             "bitDetalle": False
         }
+
+    if not permisos_modulo.get('bitConsulta', False):
+        return not_found_action(breadcrumbs, environ)
 
     # Obtenemos el menú dinámico real
     menu_dinamico = HomeService.get_sidebar_menu(id_perfil_logeado)

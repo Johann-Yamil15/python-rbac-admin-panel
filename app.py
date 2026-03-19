@@ -5,11 +5,7 @@ from core.render import render_view
 from core.router import get_route_handler
 from werkzeug.wrappers import Response, Request
 from werkzeug.utils import redirect
-# Asegúrate de que la ruta coincida con tu proyecto
 from services.login_service import SECRET_KEY
-
-# --- FUNCIÓN PARA VALIDAR EL TOKEN ---
-
 
 def get_current_user(environ):
     """Extrae y decodifica el token de la cookie de la petición."""
@@ -74,16 +70,13 @@ def application(environ, start_response):
         # Si NO está logueado
         if not current_user:
             if path.startswith('/api/'):
-                # Para APIs: devolvemos un 401 No Autorizado en formato JSON
                 resp = Response('{"success": false, "msg": "Sesión expirada"}',
                                 status=401, mimetype='application/json')
                 return resp(environ, start_response)
             else:
-                # Para vistas HTML: lo mandamos a la pantalla de login
                 resp = redirect('/login')
                 return resp(environ, start_response)
 
-        # Si SÍ está logueado, inyectamos los datos en el entorno para usarlos en los controladores
         environ['app.current_user'] = current_user
 
     # --- 3. PROCESAMIENTO DE RUTAS DINÁMICAS ---
@@ -97,7 +90,6 @@ def application(environ, start_response):
     headers = [('Content-type', ctype)]
 
     try:
-        # ✅ Siempre pasamos environ, tanto para 404 como para el resto
         response_body = handler(breadcrumbs, environ)
 
         if isinstance(response_body, Response):

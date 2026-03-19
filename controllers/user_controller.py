@@ -6,15 +6,12 @@ from services.user_service import UserService
 from services.home_service import HomeService
 from services.permisos_service import PermisosService
 from utils.validators import validate_form
-
+from controllers.error_controller import not_found_action
 
 def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError(f"Type {type(obj)} not serializable")
-
-# Agregamos 'environ' al recibir los parámetros
-
 
 def user_manager_action(breadcrumbs, environ):
     user = environ.get('app.current_user', {})
@@ -24,7 +21,6 @@ def user_manager_action(breadcrumbs, environ):
     todos_los_permisos = PermisosService.get_permisos_by_perfil(
         id_perfil_usuario)
 
-    # --- 🔍 DEBUG 1: VER TODOS LOS PERMISOS QUE LLEGAN ---
     print("\n" + "="*50)
     print(f"[DEBUG] TODOS los permisos para el perfil ID: {id_perfil_usuario}")
     for permiso in todos_los_permisos:
@@ -37,14 +33,12 @@ def user_manager_action(breadcrumbs, environ):
         {}
     )
 
-    # --- 🔍 DEBUG 2: VER QUÉ ENCONTRÓ EL FILTRO ---
     print(
         f"[DEBUG] Permisos filtrados para el módulo 'Usuario': {permisos_usuario}")
 
     # Si llega vacío, daremos permisos falsos por defecto
-    # Si llega vacío, daremos permisos falsos por defecto
     if not permisos_usuario:
-        print("[DEBUG] ⚠️ No se encontró el módulo 'Usuario'. Enviando todos los permisos en False.")
+        print("[DEBUG]  No se encontró el módulo 'Usuario'. Enviando todos los permisos en False.")
         permisos_usuario = {
             "bitAgregar": False, 
             "bitEditar": False,
@@ -53,8 +47,12 @@ def user_manager_action(breadcrumbs, environ):
             "bitDetalle": False
         }
     else:
-        print("[DEBUG] ✅ Se encontraron permisos. Enviando al renderizador.")
+        print("[DEBUG]  Se encontraron permisos. Enviando al renderizador.")
     print("="*50 + "\n")
+
+    # 3. Validar permiso de consulta ANTES de renderizar
+    if not permisos_usuario.get('bitConsulta', False):
+        return not_found_action(breadcrumbs, environ)
 
     menu_dinamico = HomeService.get_sidebar_menu(id_perfil_usuario)
 
